@@ -15,8 +15,7 @@ import java.util.jar.JarFile;
 public class ModCheckUtils {
     private static final HashMap<String, String> urlReqCache = new HashMap<>();
 
-    public static String getUrlRequest(String url) throws IllegalAccessException { return getUrlRequest(url, ""); }
-    public static String getUrlRequest(String url, String token) throws IllegalAccessException {
+    public static String getUrlRequest(String url) throws IllegalAccessException {
         if (urlReqCache.containsKey(url)) {
             return urlReqCache.get(url);
         }
@@ -25,8 +24,6 @@ public class ModCheckUtils {
             HttpURLConnection conn = (HttpURLConnection) obj.openConnection();
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(10000);
-            if (Objects.equals(token, "github")) conn.setRequestProperty("Authorization", "token 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");
-            if (Objects.equals(token, "curseforge")) conn.setRequestProperty("x-api-key", "$2a$10$.WQo3XFl/Z/g5l5AfHmsbOy93TmtepRHyHcqBkQElCBIpvWZzAzZG");
 
             BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
 
@@ -66,5 +63,16 @@ public class ModCheckUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static String getAPIUrl(String url, String type) {
+        if (Objects.equals(type, "github_releases")) {
+            return "https://me.redlimerl.com/mcsr/modcheck?type=github&target=" + url.split("/")[4] + "%2F" + url.split("/")[5];
+        }
+        if (Objects.equals(type, "curseforge_files")) {
+            return "https://me.redlimerl.com/mcsr/modcheck?type=curseforge&target=" + url.split("/")[5];
+        }
+
+        return url;
     }
 }
