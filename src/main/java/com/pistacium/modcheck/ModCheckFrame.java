@@ -7,8 +7,6 @@ import com.pistacium.modcheck.util.ModCheckStatus;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.InvalidPathException;
@@ -129,14 +127,16 @@ public class ModCheckFrame extends JFrame {
             ModCheck.setStatus(ModCheckStatus.DOWNLOADING_MOD_FILE);
 
             Path finalInstancePath = instancePath;
-            int maxCount = modCheckBoxes.entrySet().size();
             ArrayList<ModData> targetMods = new ArrayList<>();
+            int maxCount = 0;
             for (Map.Entry<ModData, JCheckBox> modEntry : modCheckBoxes.entrySet()) {
                 if (modEntry.getValue().isSelected() && modEntry.getValue().isEnabled()) {
                     targetMods.add(modEntry.getKey());
+                    maxCount++;
                 }
             }
 
+            int finalMaxCount = maxCount;
             ModCheck.THREAD_EXECUTOR.submit(() -> {
                 int count = 0;
                 ArrayList<ModData> failedMods = new ArrayList<>();
@@ -145,9 +145,11 @@ public class ModCheckFrame extends JFrame {
                     if (!targetMod.downloadModJarFile(mcVersion, finalInstancePath)) {
                         failedMods.add(targetMod);
                     }
-                    this.progressBar.setValue((int) (++count / (maxCount * 1f)));
+                    this.progressBar.setValue((int) ((++count / (finalMaxCount * 1f)) * 100));
                 }
                 this.progressBar.setValue(100);
+                ModCheck.setStatus(ModCheckStatus.IDLE);
+
                 for (ModData failedMod : failedMods) {
                     JOptionPane.showMessageDialog(this, "Failed to download '" + failedMod.getName() +"'.", "Please try again", JOptionPane.ERROR_MESSAGE);
                 }

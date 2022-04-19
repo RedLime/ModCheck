@@ -2,7 +2,7 @@ package com.pistacium.modcheck.util;
 
 public enum ModCheckStatus {
 
-    IDLE("all works done"),
+    IDLE(""),
 
     LOADING_AVAILABLE_VERSIONS("Loading available versions info"),
 
