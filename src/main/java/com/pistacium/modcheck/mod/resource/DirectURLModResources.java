@@ -26,7 +26,7 @@ public class DirectURLModResources extends ModResources<JsonObject, String> {
 
     @Override
     public Iterable<String> getChildAssets(JsonObject assets) {
-        return List.of();
+        return new ArrayList<>();
     }
 
     @Override

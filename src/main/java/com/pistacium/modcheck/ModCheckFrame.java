@@ -11,6 +11,7 @@ import java.io.File;
 import java.net.URI;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -90,7 +91,7 @@ public class ModCheckFrame extends JFrame {
 
             Path instancePath;
             try {
-                instancePath = Path.of(pathField.getText());
+                instancePath = Paths.get(pathField.getText());
             } catch (InvalidPathException exception) {
                 JOptionPane.showMessageDialog(this, "Failed to parsing Instance path!", "Please try again", JOptionPane.ERROR_MESSAGE);
                 downloadButton.setEnabled(true);

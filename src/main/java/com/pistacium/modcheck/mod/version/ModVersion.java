@@ -1,5 +1,6 @@
 package com.pistacium.modcheck.mod.version;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -10,7 +11,12 @@ public class ModVersion implements Comparable<ModVersion> {
 
     public static final Pattern versionRegex = Pattern.compile("(\\d+\\.)+(\\d+\\.)?((\\*|\\d|x)+(\\w*))");
     public static final Pattern snapshotRegex = Pattern.compile("\\d+w+\\d+\\w*");
-    public static final List<String> masterVerString = List.of("*", "x", "-");
+    public static final List<String> masterVerString = new ArrayList<>();
+    static {
+        masterVerString.add("*");
+        masterVerString.add("x");
+        masterVerString.add("-");
+    }
 
     private final String versionStr;
     private final int[] versionArray;
