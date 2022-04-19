@@ -212,14 +212,16 @@ public class ModCheckFrame extends JFrame {
     public void initMenuBar() {
         JMenuBar menuBar = new JMenuBar();
 
-        JMenu githubSource = new JMenu("Github...");
+        JMenu source = new JMenu("Source...");
+        JMenuItem githubSource = new JMenuItem("Github");
         githubSource.addActionListener(e -> {
             try {
                 Desktop.getDesktop().browse(new URI("https://github.com/RedLime/ModCheck"));
             } catch (Exception ignored) {
             }
         });
-        menuBar.add(githubSource);
+        source.add(githubSource);
+        menuBar.add(source);
 
         this.setJMenuBar(menuBar);
     }
