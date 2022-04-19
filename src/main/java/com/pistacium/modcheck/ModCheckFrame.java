@@ -1,6 +1,7 @@
 package com.pistacium.modcheck;
 
 import com.pistacium.modcheck.mod.ModData;
+import com.pistacium.modcheck.mod.resource.ModResource;
 import com.pistacium.modcheck.mod.version.ModVersion;
 import com.pistacium.modcheck.util.ModCheckStatus;
 
@@ -241,11 +242,12 @@ public class ModCheckFrame extends JFrame {
         ModVersion mcVersion = (ModVersion) this.versionSelection.getSelectedItem();
 
         for (ModData modData : ModCheck.AVAILABLE_MODS) {
-            if (modData.getLatestVersionResource(mcVersion) != null) {
+            ModResource modResource = modData.getLatestVersionResource(mcVersion);
+            if (modResource != null) {
                 JPanel modPanel = new JPanel();
                 modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 
-                JCheckBox checkBox = new JCheckBox(modData.getName());
+                JCheckBox checkBox = new JCheckBox(modData.getName() + " (v" + (modResource.getModVersion().getVersionName()) + ")");
                 checkBox.addActionListener(i -> {
                     boolean isSelected = checkBox.isSelected();
                     for (String incompatibleMod : modData.getIncompatibleMods()) {
