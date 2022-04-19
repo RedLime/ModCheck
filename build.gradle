@@ -1,3 +1,4 @@
+//file:noinspection GroovyAssignabilityCheck
 plugins {
     id 'java'
 }
@@ -8,16 +9,6 @@ repositories {
     mavenCentral()
 }
 
-jar {
-    manifest {
-        attributes 'Main-Class': "com.pistacium.modcheck.ModCheck"
-    }
-    from {
-        compileJava.classpath.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-    }
-}
 
 dependencies {
     implementation 'com.google.code.gson:gson:2.9.0'
@@ -25,4 +16,14 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': "com.pistacium.modcheck.ModCheck"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
