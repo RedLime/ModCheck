@@ -98,8 +98,6 @@ public class ModCheckFrame extends JFrame {
             }
             if (!instancePath.toString().endsWith("mods")) instancePath = instancePath.resolve("mods");
             File instanceDir = instancePath.toFile();
-            //noinspection ResultOfMethodCallIgnored
-            instanceDir.mkdirs();
             if (!instanceDir.isDirectory()) {
                 JOptionPane.showMessageDialog(this, "Please select a instance path(directory)!", "Please try again", JOptionPane.ERROR_MESSAGE);
                 downloadButton.setEnabled(true);
