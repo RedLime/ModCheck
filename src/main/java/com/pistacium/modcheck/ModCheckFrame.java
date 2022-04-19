@@ -109,8 +109,9 @@ public class ModCheckFrame extends JFrame {
                 File[] modFiles = instanceDir.listFiles();
                 if (modFiles == null) return;
                 for (File file : modFiles) {
-                    //noinspection ResultOfMethodCallIgnored
-                    file.delete();
+                    if (file.getName().endsWith(".jar"))
+                        //noinspection ResultOfMethodCallIgnored
+                        file.delete();
                 }
             }
 
