@@ -103,6 +103,7 @@ public class ModData {
     }
 
     public ModResource getLatestVersionResource(ModVersion minecraftVersion) {
+        if (minecraftVersion == null) return null;
         ModResource resource = null;
         for (ModResources<?, ?> modResources : resourcesList) {
             ModResource newResource = modResources.getLatestResource(minecraftVersion);
@@ -121,7 +122,7 @@ public class ModData {
         ModResource resource = getLatestVersionResource(minecraftVersion);
         if (resource != null) {
             try {
-                resource.downloadFile(instancePath.endsWith("/mods") ? instancePath : instancePath.resolve("mods"));
+                resource.downloadFile(instancePath);
                 return true;
             } catch (Throwable e) {
                 e.printStackTrace();

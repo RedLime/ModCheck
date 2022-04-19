@@ -47,7 +47,6 @@ public class ModResource {
 
             URLConnection con = url.openConnection();
 
-            modsPath.toFile().mkdirs();
             File download = modsPath.resolve(fileName).toFile();
 
             ReadableByteChannel rbc = Channels.newChannel(con.getInputStream());

@@ -18,12 +18,9 @@ public class ModCheck {
 
     public static final Logger LOGGER = Logger.getLogger("ModCheck");
 
-    private static ModCheckStatus STATUS = ModCheckStatus.IDLE;
     public static void setStatus(ModCheckStatus status) {
-        STATUS = status;
-        System.out.println(status.getDescription());
+        FRAME_INSTANCE.getProgressBar().setString(status.getDescription());
     }
-    public static ModCheckStatus getStatus() { return STATUS; }
 
     public static final ExecutorService THREAD_EXECUTOR = Executors.newSingleThreadExecutor();
 
@@ -41,28 +38,33 @@ public class ModCheck {
                 // Get available versions
                 setStatus(ModCheckStatus.LOADING_AVAILABLE_VERSIONS);
                 JsonElement availableElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/mod_versions.json")));
+                FRAME_INSTANCE.getProgressBar().setValue(5);
                 for (JsonElement jsonElement : availableElement.getAsJsonArray()) {
                     AVAILABLE_VERSIONS.add(ModVersion.of(jsonElement.getAsString()));
                 }
 
-
                 // Get mod list
                 setStatus(ModCheckStatus.LOADING_MOD_LIST);
                 JsonElement modElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/mods.json")));
+                FRAME_INSTANCE.getProgressBar().setValue(10);
+
                 setStatus(ModCheckStatus.LOADING_MOD_RESOURCE);
+                int count = 0, maxCount = modElement.getAsJsonArray().size();
                 for (JsonElement jsonElement : modElement.getAsJsonArray()) {
                     try {
                         if (Objects.equals(jsonElement.getAsJsonObject().get("type").getAsString(), "fabric_mod")) {
+                            FRAME_INSTANCE.getProgressBar().setString("Loading information of "+jsonElement.getAsJsonObject().get("name"));
                             ModData modData = new ModData(jsonElement.getAsJsonObject());
                             AVAILABLE_MODS.add(modData);
+                            FRAME_INSTANCE.getProgressBar().setValue((int) (10 + (((++count * 1f) / maxCount) * 90)));
                         }
                     } catch (Throwable e) {
                         LOGGER.log(Level.WARNING, "Failed to init " + jsonElement.getAsJsonObject().get("name").getAsString() + "!", e);
                     }
                 }
-
-
+                FRAME_INSTANCE.getProgressBar().setValue(100);
                 setStatus(ModCheckStatus.IDLE);
+                FRAME_INSTANCE.updateVersionList();
             } catch (Throwable e) {
                 LOGGER.log(Level.WARNING, "Exception in Initializing!", e);
             }

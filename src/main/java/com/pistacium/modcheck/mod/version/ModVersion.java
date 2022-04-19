@@ -1,6 +1,5 @@
 package com.pistacium.modcheck.mod.version;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -120,10 +119,6 @@ public class ModVersion implements Comparable<ModVersion> {
 
     @Override
     public String toString() {
-        return "ModVersion{" +
-                "versionStr='" + versionStr + '\'' +
-                ", versionArray=" + Arrays.toString(versionArray) +
-                ", versionBuild='" + versionBuild + '\'' +
-                '}';
+        return this.getVersionName();
     }
 }
