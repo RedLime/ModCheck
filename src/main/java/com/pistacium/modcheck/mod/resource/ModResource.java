@@ -9,7 +9,10 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Stack;
 
 public class ModResource {
 
@@ -41,17 +44,22 @@ public class ModResource {
         return downloadUrl;
     }
 
-    public void downloadFile(Path modsPath) {
+    public void downloadFile(Stack<File> modsPaths) {
+        if (modsPaths.size() < 1) return;
         try {
             URL url = new URL(downloadUrl);
 
             URLConnection con = url.openConnection();
 
-            File download = modsPath.resolve(fileName).toFile();
+            File download = modsPaths.pop().toPath().resolve(fileName).toFile();
 
             ReadableByteChannel rbc = Channels.newChannel(con.getInputStream());
             try (FileOutputStream fos = new FileOutputStream(download)) {
                 fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            }
+
+            while (modsPaths.size() > 0) {
+                Files.copy(download.toPath(), modsPaths.pop().toPath().resolve(fileName));
             }
         } catch (IOException e) {
             e.printStackTrace();

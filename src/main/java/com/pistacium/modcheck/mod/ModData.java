@@ -7,11 +7,9 @@ import com.pistacium.modcheck.mod.version.ModVersion;
 import com.pistacium.modcheck.mod.version.VersionPick;
 import com.pistacium.modcheck.util.ModCheckUtils;
 
+import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 public class ModData {
     private final String name;
@@ -118,7 +116,7 @@ public class ModData {
         return resource;
     }
 
-    public boolean downloadModJarFile(ModVersion minecraftVersion, Path instancePath) {
+    public boolean downloadModJarFile(ModVersion minecraftVersion, Stack<File> instancePath) {
         ModResource resource = getLatestVersionResource(minecraftVersion);
         if (resource != null) {
             try {
