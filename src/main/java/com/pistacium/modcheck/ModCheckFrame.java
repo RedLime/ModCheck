@@ -84,19 +84,17 @@ public class ModCheckFrame extends JFrame {
             }
         });
         JButton fnqButton = new JButton("?");
-        fnqButton.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "<html><body>" +
-                    "You can download to multiple instances at once<br>by using wildcard(*) in the instance path." +
-                    "<br><br>" +
-                    "The wildcard(*) string can be used only once<br>and can only be used in the last path." +
-                    "<br><br>" +
-                    "Examples)<br>" +
-                    "'..\\AppData\\Roaming\\*'<br>" +
-                    "'..\\AppData\\Roaming\\.mine*'<br>" +
-                    "'..\\AppData\\Roaming\\*craft'<br>" +
-                    "'..\\AppData\\Roaming\\.min*ft'" +
-                    "</body></html>");
-        });
+        fnqButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "<html><body>" +
+                "You can download to multiple instances at once<br>by using wildcard(*) in the instance path." +
+                "<br><br>" +
+                "The wildcard(*) string can be used only once<br>and can only be used in the last path." +
+                "<br><br>" +
+                "Examples)<br>" +
+                "'..\\AppData\\Roaming\\*'<br>" +
+                "'..\\AppData\\Roaming\\.mine*'<br>" +
+                "'..\\AppData\\Roaming\\*craft'<br>" +
+                "'..\\AppData\\Roaming\\.min*ft'" +
+                "</body></html>"));
 
         instanceSelectPanel.add(headerLabel);
         instanceSelectPanel.add(pathField);
