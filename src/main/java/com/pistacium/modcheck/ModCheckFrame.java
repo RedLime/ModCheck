@@ -119,11 +119,16 @@ public class ModCheckFrame extends JFrame {
 
             Stack<Path> instancePathStack = new Stack<>();
             try {
-                String[] pathArr = pathField.getText().split(String.format("\\%s", File.separator));
+                String pathSeparator = String.format("\\%s", File.separator);
+                String[] pathArr = (pathField.getText().endsWith(pathSeparator) ?
+                        pathField.getText().substring(0, pathField.getText().lastIndexOf(pathSeparator)-1) :
+                        pathField.getText()
+                ).split(pathSeparator);
+                System.out.println("Selected Path : " + String.join(pathSeparator, pathArr));
                 String lastPath = pathArr[pathArr.length - 1];
                 if (lastPath.contains("*") && lastPath.chars().filter(c -> c == '*').count() == 1) {
                     pathArr[pathArr.length - 1] = "";
-                    File[] pathFiles = Paths.get(String.join(File.separator, pathArr)).toFile().listFiles();
+                    File[] pathFiles = Paths.get(String.join(pathSeparator, pathArr)).toFile().listFiles();
                     if (pathFiles == null) {
                         throw new IllegalAccessException();
                     }
@@ -147,7 +152,7 @@ public class ModCheckFrame extends JFrame {
                         }
                     }
                 } else {
-                    instancePathStack.push(Paths.get(String.join(File.separator, pathArr)));
+                    instancePathStack.push(Paths.get(String.join(pathSeparator, pathArr)));
                 }
             } catch (Exception exception) {
                 exception.printStackTrace();
@@ -157,15 +162,21 @@ public class ModCheckFrame extends JFrame {
             }
 
             Stack<File> modsFileStack = new Stack<>();
-            for (Path instancePath : instancePathStack) {
+            for (Path ip : instancePathStack) {
+                Path instancePath = ip;
+                File dotMinecraft = instancePath.resolve(".minecraft").toFile();
+                if (dotMinecraft.isDirectory()) {
+                    instancePath = instancePath.resolve(".minecraft");
+                }
+
                 Path modsPath = instancePath.resolve("mods");
-                File instanceDir = modsPath.toFile();
-                if (!instanceDir.isDirectory()) {
+                File modsDir = modsPath.toFile();
+                if (!modsDir.isDirectory()) {
                     JOptionPane.showMessageDialog(this, "Please select a instance path(directory)!", "Please try again", JOptionPane.ERROR_MESSAGE);
                     downloadButton.setEnabled(true);
                     return;
                 }
-                modsFileStack.push(instanceDir);
+                modsFileStack.push(modsDir);
             }
 
             if (this.versionSelection.getSelectedItem() == null) {
@@ -178,6 +189,7 @@ public class ModCheckFrame extends JFrame {
             int maxCount = 0;
             for (Map.Entry<ModData, JCheckBox> modEntry : modCheckBoxes.entrySet()) {
                 if (modEntry.getValue().isSelected() && modEntry.getValue().isEnabled()) {
+                    System.out.println("Selected "+modEntry.getKey().getName());
                     targetMods.add(modEntry.getKey());
                     maxCount++;
                 }
@@ -214,7 +226,11 @@ public class ModCheckFrame extends JFrame {
                 ArrayList<ModData> failedMods = new ArrayList<>();
                 for (ModData targetMod : targetMods) {
                     this.progressBar.setString("Downloading '" + targetMod.getName() + "'");
-                    if (!targetMod.downloadModJarFile(mcVersion, modsFileStack)) {
+                    System.out.println("Downloading "+targetMod.getName());
+                    Stack<File> downloadFiles = new Stack<>();
+                    downloadFiles.addAll(modsFileStack);
+                    if (!targetMod.downloadModJarFile(mcVersion, downloadFiles)) {
+                        System.out.println("Failed to downloading "+targetMod.getName());
                         failedMods.add(targetMod);
                     }
                     this.progressBar.setValue((int) ((++count / (finalMaxCount * 1f)) * 100));
@@ -222,10 +238,17 @@ public class ModCheckFrame extends JFrame {
                 this.progressBar.setValue(100);
                 ModCheck.setStatus(ModCheckStatus.IDLE);
 
-                for (ModData failedMod : failedMods) {
-                    JOptionPane.showMessageDialog(this, "Failed to download '" + failedMod.getName() +"'.", "Please try again", JOptionPane.ERROR_MESSAGE);
+                System.out.println("Done with download mods");
+
+                if (failedMods.size() > 0) {
+                    StringBuilder failedModString = new StringBuilder();
+                    for (ModData failedMod : failedMods) {
+                        failedModString.append(failedMod.getName()).append(", ");
+                    }
+                    JOptionPane.showMessageDialog(this, "Failed to download " + failedModString.substring(0, failedModString.length() - 2) +".", "Please try again", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "All selected mods have been downloaded!");
                 }
-                JOptionPane.showMessageDialog(this, "All selected mods have been downloaded!");
                 downloadButton.setEnabled(true);
             });
         });
@@ -374,15 +397,16 @@ public class ModCheckFrame extends JFrame {
                     }
                 });
 
+                int line = modData.getDescription().split("\n").length;
                 JLabel description = new JLabel("<html><body>" + modData.getDescription().replace("\n", "<br>") + "</body></html>");
-                description.setMaximumSize(new Dimension(800, 60));
+                description.setMaximumSize(new Dimension(800, 60 * line));
                 description.setBorder(new EmptyBorder(0, 15,0, 0));
                 Font f = description.getFont();
                 description.setFont(f.deriveFont(f.getStyle() & ~Font.BOLD));
 
                 modPanel.add(checkBox);
                 modPanel.add(description);
-                modPanel.setMaximumSize(new Dimension(950, 60));
+                modPanel.setMaximumSize(new Dimension(950, 60 * line));
                 modPanel.setBorder(new EmptyBorder(0, 10,10, 0));
 
                 versionJPanel.add(modPanel);
