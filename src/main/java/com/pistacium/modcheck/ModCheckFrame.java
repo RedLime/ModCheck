@@ -280,10 +280,13 @@ public class ModCheckFrame extends JFrame {
         JButton selectAllButton = new JButton("Select All");
         selectAllButton.addActionListener(e -> {
             for (Map.Entry<ModData, JCheckBox> entry : modCheckBoxes.entrySet()) {
+                if (entry.getKey().getIncompatibleMods().size() > 0) continue;
+
                 if (entry.getValue().isEnabled() && entry.getKey().getWarningMessage().isEmpty()) {
                     entry.getValue().setSelected(true);
                 }
             }
+            JOptionPane.showMessageDialog(this, "<html><body>Some mods that have warnings (like noPeaceful)<br> or incompatible with other (like Starlight and Phosphor) aren't automatically selected.<br>You must be to select it yourself.</body></html>", "WARNING!", JOptionPane.WARNING_MESSAGE);
         });
         JButton deselectAllButton = new JButton("Deselect All");
         deselectAllButton.addActionListener(e -> {

@@ -1,44 +1,51 @@
 package com.pistacium.modcheck.mod.resource;
 
-import com.google.gson.JsonObject;
 import com.pistacium.modcheck.mod.version.ModVersion;
 import com.pistacium.modcheck.mod.version.VersionPick;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DirectURLModResources extends ModResources<JsonObject, String> {
+public class DirectURLModResources extends ModResources<DirectURLModResources.DirectURLSource, DirectURLModResources.DirectURLSource> {
 
-    private final String url;
-    private final String fileName;
+    public static class DirectURLSource {
+        private final String url;
+        private final String fileName;
+
+        public DirectURLSource(String url, String fileName) {
+            this.url = url;
+            this.fileName = fileName;
+        }
+    }
 
     public DirectURLModResources(String url, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions) {
-        super(null, versionPicks, defaultBuild, defaultMCVersions);
-        this.url = url;
-        String[] urlArr = url.split("/");
-        this.fileName = urlArr[urlArr.length - 1];
+        super(url, versionPicks, defaultBuild, defaultMCVersions);
     }
 
     @Override
-    protected JsonObject convertData(String data) {
-        return null;
+    protected DirectURLSource convertData(String data) {
+        String[] urlArr = data.split("/");
+        String fileName = urlArr[urlArr.length - 1];
+        return new DirectURLSource(data, fileName);
     }
 
     @Override
-    public Iterable<String> getChildAssets(JsonObject assets) {
-        return new ArrayList<>();
+    public Iterable<DirectURLSource> getChildAssets(DirectURLSource asset) {
+        ArrayList<DirectURLSource> list = new ArrayList<>();
+        list.add(asset);
+        return list;
     }
 
     @Override
-    public boolean isPreRelease(String asset) {
+    public boolean isPreRelease(DirectURLSource asset) {
         return false;
     }
 
     @Override
-    public List<ModResource> convertToModResources(String asset) {
+    public List<ModResource> convertToModResources(DirectURLSource asset) {
         ArrayList<ModResource> modResources = new ArrayList<>();
         for (ModVersion defaultMCVersion : this.getDefaultMCVersions()) {
-            modResources.add(new ModResource(defaultMCVersion, ModVersion.of(this.getDefaultBuild()), url, fileName));
+            modResources.add(new ModResource(defaultMCVersion, ModVersion.of(this.getDefaultBuild()), asset.url, asset.fileName));
         }
         return modResources;
     }

@@ -8,7 +8,6 @@ import com.pistacium.modcheck.mod.version.VersionPick;
 import com.pistacium.modcheck.util.ModCheckUtils;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.util.*;
 
 public class ModData {
@@ -43,44 +42,44 @@ public class ModData {
             }
 
 
+            ModResources<?,?> resources = null;
             // GitHub releases loader
             if (Objects.equals(type, "github_releases")) {
-                GitHubModResources resources = new GitHubModResources(
+                resources = new GitHubModResources(
                         ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
                         versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions
                 );
-                resourcesList.add(resources);
             }
 
 
             // Modrinth releases loader
             if (Objects.equals(type, "modrinth_releases")) {
-                ModrinthModResources resources = new ModrinthModResources(
+                resources = new ModrinthModResources(
                         ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
                         versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions
                 );
-                resourcesList.add(resources);
             }
 
 
             // CurseForge files loader
             if (Objects.equals(type, "curseforge_files")) {
-                CurseForgeModResources resources = new CurseForgeModResources(
+                resources = new CurseForgeModResources(
                         ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
                         versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions
                 );
-                resourcesList.add(resources);
             }
 
 
             // Direct URL loader
             if (Objects.equals(type, "direct")) {
-                DirectURLModResources resources = new DirectURLModResources(
+                resources = new DirectURLModResources(
                         ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type),
                         versionPicks, assetObject.get("build").getAsString(), supportVersions
                 );
-                resourcesList.add(resources);
             }
+
+
+            if (resources != null) resourcesList.add(resources);
         }
     }
 

@@ -17,12 +17,8 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ModCheck {
-
-    public static final Logger LOGGER = Logger.getLogger("ModCheck");
 
     public static void setStatus(ModCheckStatus status) {
         FRAME_INSTANCE.getProgressBar().setString(status.getDescription());
@@ -65,7 +61,10 @@ public class ModCheck {
                             AVAILABLE_MODS.add(modData);
                         }
                     } catch (Throwable e) {
-                        LOGGER.log(Level.WARNING, "Failed to init " + jsonElement.getAsJsonObject().get("name").getAsString() + "!", e);
+                        StringWriter sw = new StringWriter();
+                        PrintWriter pw = new PrintWriter(sw);
+                        e.printStackTrace(pw);
+                        System.out.println("Failed to init " + jsonElement.getAsJsonObject().get("name").getAsString() + "!\r\n" + sw);
                     } finally {
                         FRAME_INSTANCE.getProgressBar().setValue((int) (10 + (((++count * 1f) / maxCount) * 90)));
                     }
