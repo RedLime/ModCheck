@@ -31,8 +31,8 @@ public abstract class ModResources<T, R> {
             }
         }
 
-        for (R childAsset : getChildAssets(resourceAssets)) {
-            if (isPreRelease(childAsset) && !isNeedCheckPreRelease) return;
+        for (R childAsset : assetIterable) {
+            if (isPreRelease(childAsset) && !isNeedCheckPreRelease) continue;
 
             List<ModResource> modResources = convertToModResources(childAsset);
             HashMap<ModVersion, ModResource> updateMap = new HashMap<>();
