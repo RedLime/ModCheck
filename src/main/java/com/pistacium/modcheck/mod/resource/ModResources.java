@@ -100,7 +100,7 @@ public abstract class ModResources<T, R> {
             versionCount++;
         }
 
-        return versionPicks.size() != versionCount || modResource.getFileName().endsWith("-sources.jar") || modResource.getFileName().endsWith("-dev.jar");
+        return versionPicks.size() > versionCount || modResource.getFileName().endsWith("-sources.jar") || modResource.getFileName().endsWith("-dev.jar");
     }
 
     public ModResource getLatestResource(ModVersion mcVersion) {
