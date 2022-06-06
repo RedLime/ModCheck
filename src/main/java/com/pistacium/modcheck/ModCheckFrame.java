@@ -14,8 +14,8 @@ import javax.swing.plaf.FontUIResource;
 import java.awt.*;
 import java.io.File;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -30,7 +30,8 @@ public class ModCheckFrame extends JFrame {
     private JScrollPane versionScrollPane;
     private final HashMap<ModData, JCheckBox> modCheckBoxes = new HashMap<>();
     private JButton downloadButton;
-    private JTextField pathField;
+    private File[] selectDirs = null;
+    private JLabel selectedDirLabel;
 
     public JProgressBar getProgressBar() {
         return progressBar;
@@ -57,6 +58,9 @@ public class ModCheckFrame extends JFrame {
         setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        URL resource = getClass().getClassLoader().getResource("end_crystal.png");
+        if (resource != null) setIconImage(new ImageIcon(resource).getImage());
     }
 
     private static void setUIFont(){
@@ -72,34 +76,24 @@ public class ModCheckFrame extends JFrame {
     private void initHeaderLayout() {
         JPanel instanceSelectPanel = new JPanel();
 
-        JLabel headerLabel = new JLabel("Instance Path: ");
-        pathField = new JTextField(30);
-        JButton selectPathButton = new JButton("Select Path");
+        JButton selectPathButton = new JButton("Select Instances Path");
         selectPathButton.addActionListener(e -> {
             JFileChooser pathSelector = new JFileChooser();
+            pathSelector.setMultiSelectionEnabled(true);
             pathSelector.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            pathSelector.showSaveDialog(null);
-            if (pathSelector.getSelectedFile() != null) {
-                pathField.setText(pathSelector.getSelectedFile().getPath());
+            int showDialog = pathSelector.showSaveDialog(null);
+            File[] files = pathSelector.getSelectedFiles();
+            if (pathSelector.getSelectedFiles() != null && showDialog == JFileChooser.APPROVE_OPTION) {
+                selectDirs = files;
+                StringBuilder stringBuilder = new StringBuilder();
+                for (File selectDir : selectDirs) {
+                    stringBuilder.append(selectDir.toPath()).append("<br>");
+                }
+                selectedDirLabel.setText("<html>Selected Instances : <br>" + stringBuilder.substring(0, stringBuilder.length() - (stringBuilder.length() != 0 ? 4 : 0)) + "</html>");
             }
         });
-        JButton fnqButton = new JButton("?");
-        fnqButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "<html><body>" +
-                "You can download to multiple instances at once<br>by using wildcard(*) in the instance path." +
-                "<br><br>" +
-                "The wildcard(*) string can be used only once<br>and can only be used in the last path." +
-                "<br><br>" +
-                "Examples)<br>" +
-                "'..\\AppData\\Roaming\\*'<br>" +
-                "'..\\AppData\\Roaming\\.mine*'<br>" +
-                "'..\\AppData\\Roaming\\*craft'<br>" +
-                "'..\\AppData\\Roaming\\.min*ft'" +
-                "</body></html>"));
 
-        instanceSelectPanel.add(headerLabel);
-        instanceSelectPanel.add(pathField);
         instanceSelectPanel.add(selectPathButton);
-        instanceSelectPanel.add(fnqButton);
         mainPanel.add(instanceSelectPanel, BorderLayout.NORTH);
     }
 
@@ -112,58 +106,15 @@ public class ModCheckFrame extends JFrame {
         progressBar.setPreferredSize(new Dimension(500, 30));
 
         JPanel buttonPanel = new JPanel(new GridLayout(2, 1));
-        JCheckBox jCheckBox = new JCheckBox("Delete all old .jar files");
+        JCheckBox jCheckBox = new JCheckBox("Delete all .jar files before downloading");
         downloadButton = new JButton("Download");
         downloadButton.addActionListener(e -> {
+            if (selectDirs == null || selectDirs.length < 1) return;
+
             downloadButton.setEnabled(false);
-
-            Stack<Path> instancePathStack = new Stack<>();
-            try {
-                String pathSeparator = String.format("\\%s", File.separator);
-                String[] pathArr = (pathField.getText().endsWith(pathSeparator) ?
-                        pathField.getText().substring(0, pathField.getText().lastIndexOf(pathSeparator)-1) :
-                        pathField.getText()
-                ).split(pathSeparator);
-                System.out.println("Selected Path : " + String.join(pathSeparator, pathArr));
-                String lastPath = pathArr[pathArr.length - 1];
-                if (lastPath.contains("*") && lastPath.chars().filter(c -> c == '*').count() == 1) {
-                    pathArr[pathArr.length - 1] = "";
-                    File[] pathFiles = Paths.get(String.join(pathSeparator, pathArr)).toFile().listFiles();
-                    if (pathFiles == null) {
-                        throw new IllegalAccessException();
-                    }
-
-                    if (lastPath.equals("*")) {
-                        for (File pathFile : pathFiles) {
-                            if (pathFile.isDirectory()) instancePathStack.push(pathFile.toPath());
-                        }
-                    } else if (lastPath.startsWith("*")) {
-                        for (File pathFile : pathFiles) {
-                            if (pathFile.isDirectory() && pathFile.getName().endsWith(lastPath.replace("*", ""))) instancePathStack.push(pathFile.toPath());
-                        }
-                    } else if (lastPath.endsWith("*")) {
-                        for (File pathFile : pathFiles) {
-                            if (pathFile.isDirectory() && pathFile.getName().startsWith(lastPath.replace("*", ""))) instancePathStack.push(pathFile.toPath());
-                        }
-                    } else {
-                        String[] split = lastPath.split("\\*");
-                        for (File pathFile : pathFiles) {
-                            if (pathFile.isDirectory() && pathFile.getName().startsWith(split[0]) && pathFile.getName().endsWith(split[1])) instancePathStack.push(pathFile.toPath());
-                        }
-                    }
-                } else {
-                    instancePathStack.push(Paths.get(String.join(pathSeparator, pathArr)));
-                }
-            } catch (Exception exception) {
-                exception.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Failed to parsing Instance path!", "Please try again", JOptionPane.ERROR_MESSAGE);
-                downloadButton.setEnabled(true);
-                return;
-            }
-
             Stack<File> modsFileStack = new Stack<>();
-            for (Path ip : instancePathStack) {
-                Path instancePath = ip;
+            for (File instanceDir : selectDirs) {
+                Path instancePath = instanceDir.toPath();
                 File dotMinecraft = instancePath.resolve(".minecraft").toFile();
                 if (dotMinecraft.isDirectory()) {
                     instancePath = instancePath.resolve(".minecraft");
@@ -265,6 +216,10 @@ public class ModCheckFrame extends JFrame {
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
 
+        JPanel instancePathsPanel = new JPanel();
+        selectedDirLabel = new JLabel("");
+        instancePathsPanel.add(selectedDirLabel);
+
         JPanel versionSelectPanel = new JPanel();
         JLabel headerLabel = new JLabel("Minecraft Version: ");
         versionSelection = new JComboBox<>();
@@ -300,6 +255,7 @@ public class ModCheckFrame extends JFrame {
 
         versionSelectPanel.add(headerLabel);
         versionSelectPanel.add(versionSelection);
+        centerPanel.add(instancePathsPanel);
         centerPanel.add(versionSelectPanel);
         centerPanel.add(selectButtonPanel);
         centerPanel.add(versionScrollPane);

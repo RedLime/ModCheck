@@ -41,13 +41,15 @@ public class ModData {
                 versionPicks.add(VersionPick.valueOf(element.getAsString().toUpperCase(Locale.ROOT)));
             }
 
+            String format = resource.has("format") ? resource.get("format").getAsString() : null;
+
 
             ModResources<?,?> resources = null;
             // GitHub releases loader
             if (Objects.equals(type, "github_releases")) {
                 resources = new GitHubModResources(
                         ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
-                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions
+                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions, format
                 );
             }
 
@@ -56,7 +58,7 @@ public class ModData {
             if (Objects.equals(type, "modrinth_releases")) {
                 resources = new ModrinthModResources(
                         ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
-                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions
+                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions, format
                 );
             }
 
@@ -65,7 +67,7 @@ public class ModData {
             if (Objects.equals(type, "curseforge_files")) {
                 resources = new CurseForgeModResources(
                         ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
-                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions
+                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions, format
                 );
             }
 
@@ -74,7 +76,7 @@ public class ModData {
             if (Objects.equals(type, "direct")) {
                 resources = new DirectURLModResources(
                         ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type),
-                        versionPicks, assetObject.get("build").getAsString(), supportVersions
+                        versionPicks, assetObject.get("build").getAsString(), supportVersions, format
                 );
             }
 

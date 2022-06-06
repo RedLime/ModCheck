@@ -107,7 +107,7 @@ public class ModVersion implements Comparable<ModVersion> {
         }
 
         if (this.versionRange != 0 || target.versionRange != 0) {
-            if (this.versionRange * -1 == result || target.versionRange == result) {
+            if (this.versionRange == -result || target.versionRange == result) {
                 return 0;
             }
         }

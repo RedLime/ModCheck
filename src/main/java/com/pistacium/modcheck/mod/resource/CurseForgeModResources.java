@@ -13,8 +13,8 @@ import java.util.Map;
 
 public class CurseForgeModResources extends ModResources<JsonArray, JsonObject> {
 
-    public CurseForgeModResources(String data, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions) {
-        super(data, versionPicks, defaultBuild, defaultMCVersions);
+    public CurseForgeModResources(String data, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions, String fileFormat) {
+        super(data, versionPicks, defaultBuild, defaultMCVersions, fileFormat);
     }
 
     @Override

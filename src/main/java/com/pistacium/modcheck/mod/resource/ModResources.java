@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class ModResources<T, R> {
 
@@ -16,7 +17,7 @@ public abstract class ModResources<T, R> {
     private final String defaultBuild;
     private final ArrayList<ModVersion> defaultMCVersions;
 
-    public ModResources(String data, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions) {
+    public ModResources(String data, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions, String fileFormat) {
         T resourceAssets = convertData(data);
         this.versionPicks = versionPicks;
         this.defaultBuild = defaultBuild;
@@ -39,6 +40,22 @@ public abstract class ModResources<T, R> {
 
             for (ModResource modResource : modResources) {
                 if (isInvalidResource(modResource)) continue;
+                boolean isSupportVersion = false;
+                if (fileFormat != null) {
+                    Pattern pattern = Pattern.compile(fileFormat);
+                    if (pattern.matcher(modResource.getFileName()).find()) {
+                        isSupportVersion = true;
+                    }
+                }
+                if (!isSupportVersion) {
+                    for (ModVersion defaultMCVersion : this.defaultMCVersions) {
+                        if (defaultMCVersion.compareTo(modResource.getSupportMCVersion()) == 0) {
+                            isSupportVersion = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isSupportVersion) continue;
 
                 boolean foundPrev = false;
                 for (Map.Entry<ModVersion, ModResource> resourceEntry : resourceMap.entrySet()) {

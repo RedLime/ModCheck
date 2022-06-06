@@ -18,8 +18,8 @@ public class DirectURLModResources extends ModResources<DirectURLModResources.Di
         }
     }
 
-    public DirectURLModResources(String url, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions) {
-        super(url, versionPicks, defaultBuild, defaultMCVersions);
+    public DirectURLModResources(String url, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions, String fileFormat) {
+        super(url, versionPicks, defaultBuild, defaultMCVersions, fileFormat);
     }
 
     @Override

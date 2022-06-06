@@ -14,8 +14,8 @@ import java.util.Objects;
 
 public class ModrinthModResources extends ModResources<JsonArray, JsonObject> {
 
-    public ModrinthModResources(String data, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions) {
-        super(data, versionPicks, defaultBuild, defaultMCVersions);
+    public ModrinthModResources(String data, List<VersionPick> versionPicks, String defaultBuild, ArrayList<ModVersion> defaultMCVersions, String fileFormat) {
+        super(data, versionPicks, defaultBuild, defaultMCVersions, fileFormat);
     }
 
     @Override
