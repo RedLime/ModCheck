@@ -5,4 +5,4 @@ Minecraft SpeedRun Mods Auto Installer/Updater
 
 original idea by [pistacium](https://github.com/pistacium/ModCheck)
 
-![image](https://user-images.githubusercontent.com/25276450/164161542-c766e2e3-fe65-45fc-8428-82397769584d.png)
+![image](https://user-images.githubusercontent.com/25276450/172102912-455735a5-558f-4330-84c6-fad5bf9aa92b.png)
