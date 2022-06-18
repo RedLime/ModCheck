@@ -7,10 +7,12 @@ import com.pistacium.modcheck.mod.resource.ModResource;
 import com.pistacium.modcheck.mod.version.ModVersion;
 import com.pistacium.modcheck.util.ModCheckStatus;
 import com.pistacium.modcheck.util.ModCheckUtils;
+import com.pistacium.modcheck.util.SwingUtils;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.FontUIResource;
+import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.*;
 import java.io.File;
 import java.net.URI;
@@ -77,12 +79,27 @@ public class ModCheckFrame extends JFrame {
     private void initHeaderLayout() {
         JPanel instanceSelectPanel = new JPanel();
 
-        JButton selectPathButton = new JButton("Select Instances Path");
+        JButton selectPathButton = new JButton("Select Instance Paths");
         selectPathButton.addActionListener(e -> {
             JFileChooser pathSelector = new JFileChooser();
             pathSelector.setMultiSelectionEnabled(true);
             pathSelector.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int showDialog = pathSelector.showSaveDialog(null);
+            pathSelector.setDialogType(JFileChooser.CUSTOM_DIALOG);
+            pathSelector.setDialogTitle("Select Instance Paths");
+            JComboBox<?> jComboBox = SwingUtils.getDescendantsOfType(JComboBox.class, pathSelector).get(0);
+            jComboBox.setEditable(true);
+            jComboBox.setEditor(new BasicComboBoxEditor.UIResource() {
+                @Override
+                public Object getItem() {
+                    try {
+                        return new File((String) super.getItem());
+                    } catch (Exception e) {
+                        return super.getItem();
+                    }
+                }
+            });
+
+            int showDialog = pathSelector.showDialog(this, "Select");
             File[] files = pathSelector.getSelectedFiles();
             if (pathSelector.getSelectedFiles() != null && showDialog == JFileChooser.APPROVE_OPTION) {
                 selectDirs = files;
