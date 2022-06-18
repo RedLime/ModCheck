@@ -37,7 +37,7 @@ public class ModCheckFrame extends JFrame {
         return progressBar;
     }
 
-    ModCheckFrame() {
+    ModCheckFrame() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         super("ModCheck v"+ ModCheckConstants.APPLICATION_VERSION + " by RedLime");
         setUIFont();
 
@@ -58,6 +58,7 @@ public class ModCheckFrame extends JFrame {
         setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
         URL resource = getClass().getClassLoader().getResource("end_crystal.png");
         if (resource != null) setIconImage(new ImageIcon(resource).getImage());

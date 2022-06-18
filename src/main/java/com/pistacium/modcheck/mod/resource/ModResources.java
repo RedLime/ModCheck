@@ -31,6 +31,7 @@ public abstract class ModResources<T, R> {
                 break;
             }
         }
+        if (fileFormat != null) isNeedCheckPreRelease = true;
 
         for (R childAsset : assetIterable) {
             if (isPreRelease(childAsset) && !isNeedCheckPreRelease) continue;
@@ -43,8 +44,11 @@ public abstract class ModResources<T, R> {
                 boolean isSupportVersion = false;
                 if (fileFormat != null) {
                     Pattern pattern = Pattern.compile(fileFormat);
+                    System.out.println(fileFormat + " : " + modResource.getFileName());
                     if (pattern.matcher(modResource.getFileName()).find()) {
                         isSupportVersion = true;
+                    } else {
+                        continue;
                     }
                 }
                 if (!isSupportVersion) {
