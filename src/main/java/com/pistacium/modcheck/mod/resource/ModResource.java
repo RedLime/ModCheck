@@ -48,6 +48,7 @@ public class ModResource {
         URL url = new URL(this.getDownloadUrl());
 
         URLConnection con = url.openConnection();
+        con.setRequestProperty("User-Agent", "ModCheck");
 
         File download = modsPaths.pop().toPath().resolve(this.getFileName()).toFile();
 
@@ -62,15 +63,5 @@ public class ModResource {
             Files.copy(download.toPath(), copyPath);
             System.out.println("Copied to " + copyPath);
         }
-    }
-
-    @Override
-    public String toString() {
-        return "ModResource{" +
-                "supportMCVersion=" + supportMCVersion +
-                ", modVersion=" + modVersion +
-                ", downloadUrl='" + downloadUrl + '\'' +
-                ", fileName='" + fileName + '\'' +
-                '}';
     }
 }

@@ -41,32 +41,30 @@ public class ModCheck {
                 // Get available versions
                 setStatus(ModCheckStatus.LOADING_AVAILABLE_VERSIONS);
                 JsonElement availableElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/mod_versions.json")));
-                FRAME_INSTANCE.getProgressBar().setValue(5);
+                FRAME_INSTANCE.getProgressBar().setValue(30);
                 for (JsonElement jsonElement : availableElement.getAsJsonArray()) {
                     AVAILABLE_VERSIONS.add(ModVersion.of(jsonElement.getAsString()));
                 }
 
                 // Get mod list
                 setStatus(ModCheckStatus.LOADING_MOD_LIST);
-                JsonElement modElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/mods.json")));
-                FRAME_INSTANCE.getProgressBar().setValue(10);
+                JsonElement modElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://me.redlimerl.com/mcsr/modcheck/v2")));
+                FRAME_INSTANCE.getProgressBar().setValue(60);
 
                 setStatus(ModCheckStatus.LOADING_MOD_RESOURCE);
                 int count = 0, maxCount = modElement.getAsJsonArray().size();
                 for (JsonElement jsonElement : modElement.getAsJsonArray()) {
                     try {
-                        if (Objects.equals(jsonElement.getAsJsonObject().get("type").getAsString(), "fabric_mod")) {
-                            FRAME_INSTANCE.getProgressBar().setString("Loading information of "+jsonElement.getAsJsonObject().get("name"));
-                            ModData modData = new ModData(jsonElement.getAsJsonObject());
-                            AVAILABLE_MODS.add(modData);
-                        }
+                        FRAME_INSTANCE.getProgressBar().setString("Loading information of "+jsonElement.getAsJsonObject().get("name"));
+                        ModData modData = new ModData(jsonElement.getAsJsonObject());
+                        AVAILABLE_MODS.add(modData);
                     } catch (Throwable e) {
                         StringWriter sw = new StringWriter();
                         PrintWriter pw = new PrintWriter(sw);
                         e.printStackTrace(pw);
                         System.out.println("Failed to init " + jsonElement.getAsJsonObject().get("name").getAsString() + "!\r\n" + sw);
                     } finally {
-                        FRAME_INSTANCE.getProgressBar().setValue((int) (10 + (((++count * 1f) / maxCount) * 90)));
+                        FRAME_INSTANCE.getProgressBar().setValue((int) (60 + (((++count * 1f) / maxCount) * 40)));
                     }
                 }
                 FRAME_INSTANCE.getProgressBar().setValue(100);
@@ -78,7 +76,7 @@ public class ModCheck {
                 e.printStackTrace(pw);
                 int result = JOptionPane.showOptionDialog(null, sw.toString(), "Error exception!",
                         JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null,
-                        new String[] { "Copy to Clipboard", "Cancel" }, "Copy to Clipboard");
+                        new String[] { "Copy to clipboard a logs", "Cancel" }, "Copy to clipboard a logs");
                 if (result == 0) {
                     StringSelection selection = new StringSelection(sw.toString());
                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();

@@ -2,22 +2,22 @@ package com.pistacium.modcheck.mod;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.pistacium.modcheck.mod.resource.*;
+import com.pistacium.modcheck.mod.resource.ModResource;
 import com.pistacium.modcheck.mod.version.ModVersion;
-import com.pistacium.modcheck.mod.version.VersionPick;
-import com.pistacium.modcheck.util.ModCheckUtils;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 public class ModData {
     private final String name;
     private final String description;
     private final String warningMessage;
     private final List<String> incompatibleMods = new ArrayList<>();
-    private final List<ModResources<?, ?>> resourcesList = new ArrayList<>();
+    private final List<ModResource> resourceList = new ArrayList<>();
 
-    public ModData(JsonObject jsonObject) throws IllegalAccessException {
+    public ModData(JsonObject jsonObject) {
         this.name = jsonObject.get("name").getAsString();
         this.description = jsonObject.get("description").getAsString();
         this.warningMessage = jsonObject.has("warn") ? jsonObject.get("warn").getAsString() : "";
@@ -25,63 +25,17 @@ public class ModData {
             this.incompatibleMods.add(jsonElement.getAsString());
         }
 
-        for (JsonElement jsonElement : jsonObject.getAsJsonArray("downloads")) {
-            JsonObject assetObject = jsonElement.getAsJsonObject();
-            ArrayList<ModVersion> supportVersions = new ArrayList<>();
+        for (JsonElement jsonElement : jsonObject.getAsJsonArray("versions")) {
+            JsonObject versionObject = jsonElement.getAsJsonObject();
 
-            for (JsonElement versions : assetObject.getAsJsonArray("versions")) {
-                supportVersions.add(ModVersion.of(versions.getAsString()));
-            }
+            ModResource resource = new ModResource(
+                    ModVersion.of(versionObject.get("targetVersion").getAsString()),
+                    ModVersion.of(versionObject.get("buildVersion").getAsString()),
+                    versionObject.get("downloadUrl").getAsString(),
+                    versionObject.get("filename").getAsString()
+            );
 
-            JsonObject resource = assetObject.getAsJsonObject("resource");
-            String type = resource.get("type").getAsString();
-
-            ArrayList<VersionPick> versionPicks = new ArrayList<>();
-            for (JsonElement element : resource.getAsJsonArray("values")) {
-                versionPicks.add(VersionPick.valueOf(element.getAsString().toUpperCase(Locale.ROOT)));
-            }
-
-            String format = resource.has("format") ? resource.get("format").getAsString() : null;
-
-
-            ModResources<?,?> resources = null;
-            // GitHub releases loader
-            if (Objects.equals(type, "github_releases")) {
-                resources = new GitHubModResources(
-                        ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
-                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions, format
-                );
-            }
-
-
-            // Modrinth releases loader
-            if (Objects.equals(type, "modrinth_releases")) {
-                resources = new ModrinthModResources(
-                        ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
-                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions, format
-                );
-            }
-
-
-            // CurseForge files loader
-            if (Objects.equals(type, "curseforge_files")) {
-                resources = new CurseForgeModResources(
-                        ModCheckUtils.getUrlRequest(ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type)),
-                        versionPicks, assetObject.has("build") ? assetObject.get("build").getAsString() : null, supportVersions, format
-                );
-            }
-
-
-            // Direct URL loader
-            if (Objects.equals(type, "direct")) {
-                resources = new DirectURLModResources(
-                        ModCheckUtils.getAPIUrl(resource.get("url").getAsString(), type),
-                        versionPicks, assetObject.get("build").getAsString(), supportVersions, format
-                );
-            }
-
-
-            if (resources != null) resourcesList.add(resources);
+            resourceList.add(resource);
         }
     }
 
@@ -103,18 +57,10 @@ public class ModData {
 
     public ModResource getLatestVersionResource(ModVersion minecraftVersion) {
         if (minecraftVersion == null) return null;
-        ModResource resource = null;
-        for (ModResources<?, ?> modResources : resourcesList) {
-            ModResource newResource = modResources.getLatestResource(minecraftVersion);
-            if (newResource != null) {
-                if (resource == null) {
-                    resource = newResource;
-                } else {
-                    resource = newResource.getModVersion().compareTo(resource.getModVersion()) > 0 ? newResource : resource;
-                }
-            }
+        for (ModResource modResource : resourceList) {
+            if (modResource.getSupportMCVersion().compareTo(minecraftVersion) == 0) return modResource;
         }
-        return resource;
+        return null;
     }
 
     public boolean downloadModJarFile(ModVersion minecraftVersion, Stack<File> instancePath) {
@@ -129,14 +75,5 @@ public class ModData {
             }
         }
         return false;
-    }
-
-    @Override
-    public String toString() {
-        return "ModData{" +
-                "name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", resourcesList=" + resourcesList.size() +
-                '}';
     }
 }

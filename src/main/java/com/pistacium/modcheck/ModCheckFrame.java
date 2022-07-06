@@ -235,7 +235,7 @@ public class ModCheckFrame extends JFrame {
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
 
         JPanel instancePathsPanel = new JPanel();
-        selectedDirLabel = new JLabel("");
+        selectedDirLabel = new JLabel("You can select multiple instances by press shift or ctrl key");
         instancePathsPanel.add(selectedDirLabel);
 
         JPanel versionSelectPanel = new JPanel();
