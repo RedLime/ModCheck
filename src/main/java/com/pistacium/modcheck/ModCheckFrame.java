@@ -131,6 +131,9 @@ public class ModCheckFrame extends JFrame {
 
             downloadButton.setEnabled(false);
             Stack<File> modsFileStack = new Stack<>();
+
+            int ignoreInstance = -1;
+
             for (File instanceDir : selectDirs) {
                 Path instancePath = instanceDir.toPath();
                 File dotMinecraft = instancePath.resolve(".minecraft").toFile();
@@ -141,11 +144,19 @@ public class ModCheckFrame extends JFrame {
                 Path modsPath = instancePath.resolve("mods");
                 File modsDir = modsPath.toFile();
                 if (!modsDir.isDirectory()) {
-                    JOptionPane.showMessageDialog(this, "Please select a instance path(directory)!", "Please try again", JOptionPane.ERROR_MESSAGE);
-                    downloadButton.setEnabled(true);
-                    return;
+                    int result = ignoreInstance != -1 ? ignoreInstance : JOptionPane.showConfirmDialog(this, "You have selected a directory but not a minecraft instance directory.\nAre you sure you want to download in this directory?", "Wrong instance directory", JOptionPane.OK_CANCEL_OPTION);
+
+                    System.out.println(result);
+                    if (result != 0) {
+                        downloadButton.setEnabled(true);
+                        return;
+                    } else {
+                        ignoreInstance = result;
+                        modsFileStack.push(instanceDir);
+                    }
+                } else {
+                    modsFileStack.push(modsDir);
                 }
-                modsFileStack.push(modsDir);
             }
 
             if (this.versionSelection.getSelectedItem() == null) {
