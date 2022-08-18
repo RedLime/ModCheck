@@ -103,11 +103,13 @@ public class ModCheckFrame extends JFrame {
             File[] files = pathSelector.getSelectedFiles();
             if (pathSelector.getSelectedFiles() != null && showDialog == JFileChooser.APPROVE_OPTION) {
                 selectDirs = files;
+                String parentDir = "";
                 StringBuilder stringBuilder = new StringBuilder();
                 for (File selectDir : selectDirs) {
-                    stringBuilder.append(selectDir.toPath()).append("<br>");
+                    stringBuilder.append(parentDir.isEmpty() ? selectDir.getPath() : selectDir.getPath().replace(parentDir, "")).append(", ");
+                    parentDir = selectDir.getParent();
                 }
-                selectedDirLabel.setText("<html>Selected Instances : <br>" + stringBuilder.substring(0, stringBuilder.length() - (stringBuilder.length() != 0 ? 4 : 0)) + "</html>");
+                selectedDirLabel.setText("<html>Selected Instances : <br>" + stringBuilder.substring(0, stringBuilder.length() - (stringBuilder.length() != 0 ? 2 : 0)) + "</html>");
             }
         });
 
