@@ -371,7 +371,8 @@ public class ModCheckFrame extends JFrame {
                 JPanel modPanel = new JPanel();
                 modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 
-                JCheckBox checkBox = new JCheckBox(modData.getName() + " (v" + (modResource.getModVersion().getVersionName()) + ")");
+                String versionName = modResource.getModVersion().getVersionName();
+                JCheckBox checkBox = new JCheckBox(modData.getName() + " (v" + (versionName.substring(versionName.startsWith("v") ? 1 : 0)) + ")");
                 checkBox.addActionListener(i -> {
                     boolean isSelected = checkBox.isSelected();
                     for (String incompatibleMod : modData.getIncompatibleMods()) {
