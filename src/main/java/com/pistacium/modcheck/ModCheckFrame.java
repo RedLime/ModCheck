@@ -162,7 +162,7 @@ public class ModCheckFrame extends JFrame {
             }
 
             if (this.versionSelection.getSelectedItem() == null) {
-                JOptionPane.showMessageDialog(this, "??? What are you doing");
+                JOptionPane.showMessageDialog(this, "Error: selected item is null");
                 downloadButton.setEnabled(true);
                 return;
             }
@@ -220,7 +220,7 @@ public class ModCheckFrame extends JFrame {
                 this.progressBar.setValue(100);
                 ModCheck.setStatus(ModCheckStatus.IDLE);
 
-                System.out.println("Done with download mods");
+                System.out.println("Downloading mods complete");
 
                 if (failedMods.size() > 0) {
                     StringBuilder failedModString = new StringBuilder();
@@ -272,7 +272,7 @@ public class ModCheckFrame extends JFrame {
                     entry.getValue().setSelected(true);
                 }
             }
-            JOptionPane.showMessageDialog(this, "<html><body>Some mods that have warnings (like noPeaceful)<br> or incompatible with other (like Starlight and Phosphor) aren't automatically selected.<br>You must be to select it yourself.</body></html>", "WARNING!", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "<html><body>Some mods that have warnings (like noPeaceful)<br> or incompatible with other mods (like Starlight and Phosphor) aren't automatically selected.<br>You have to select them yourself.</body></html>", "WARNING!", JOptionPane.WARNING_MESSAGE);
         });
         JButton deselectAllButton = new JButton("Deselect All");
         deselectAllButton.addActionListener(e -> {
@@ -299,7 +299,7 @@ public class ModCheckFrame extends JFrame {
 
         JMenu source = new JMenu("Info");
 
-        JMenuItem githubSource = new JMenuItem("Github...");
+        JMenuItem githubSource = new JMenuItem("GitHub...");
         githubSource.addActionListener(e -> {
             try {
                 Desktop.getDesktop().browse(new URI("https://github.com/RedLime/ModCheck"));
@@ -308,7 +308,7 @@ public class ModCheckFrame extends JFrame {
         });
         source.add(githubSource);
 
-        JMenuItem donateSource = new JMenuItem("Support...");
+        JMenuItem donateSource = new JMenuItem("Support");
         donateSource.addActionListener(e -> {
             try {
                 Desktop.getDesktop().browse(new URI("https://ko-fi.com/redlimerl"));
@@ -317,7 +317,7 @@ public class ModCheckFrame extends JFrame {
         });
         source.add(donateSource);
 
-        JMenuItem checkChangeLogSource = new JMenuItem("Changelog...");
+        JMenuItem checkChangeLogSource = new JMenuItem("Changelog");
         checkChangeLogSource.addActionListener(e -> {
             try {
                 Desktop.getDesktop().browse(new URI("https://github.com/RedLime/ModCheck/releases/tag/"+ModCheckConstants.APPLICATION_VERSION));
@@ -326,7 +326,7 @@ public class ModCheckFrame extends JFrame {
         });
         source.add(checkChangeLogSource);
 
-        JMenuItem updateCheckSource = new JMenuItem("Check new update");
+        JMenuItem updateCheckSource = new JMenuItem("Check for updates");
         updateCheckSource.addActionListener(e -> {
             try {
                 JsonObject jsonObject = JsonParser.parseString(ModCheckUtils.getUrlRequest("https://api.github.com/repos/RedLime/ModCheck/releases/latest")).getAsJsonObject();
@@ -336,7 +336,7 @@ public class ModCheckFrame extends JFrame {
                         Desktop.getDesktop().browse(new URI("https://github.com/RedLime/ModCheck/releases/latest"));
                     }
                 } else {
-                    JOptionPane.showMessageDialog(this, "You are using latest version!");
+                    JOptionPane.showMessageDialog(this, "You are using the latest version!");
                 }
             } catch (Exception ignored) {
             }
@@ -384,7 +384,7 @@ public class ModCheckFrame extends JFrame {
                     }
 
                     if (isSelected && !modData.getWarningMessage().isEmpty()) {
-                        JOptionPane.showMessageDialog(this, "<html><body>" + modData.getWarningMessage() + "<br>If you didn't follow this warning, your run being may rejected.</body></html>", "WARNING!", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "<html><body>" + modData.getWarningMessage() + "<br>If you ignore this warning, your run being may get rejected.</body></html>", "WARNING!", JOptionPane.WARNING_MESSAGE);
                     }
                 });
 
