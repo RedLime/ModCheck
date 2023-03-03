@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.pistacium.modcheck.mod.ModData;
 import com.pistacium.modcheck.mod.version.ModVersion;
+import com.pistacium.modcheck.util.Config;
 import com.pistacium.modcheck.util.ModCheckStatus;
 import com.pistacium.modcheck.util.ModCheckUtils;
 
@@ -31,6 +32,8 @@ public class ModCheck {
     public static final ArrayList<ModVersion> AVAILABLE_VERSIONS = new ArrayList<>();
 
     public static final ArrayList<ModData> AVAILABLE_MODS = new ArrayList<>();
+
+    public static Config config;
 
 
     public static void main(String[] args) {

@@ -1,7 +1,7 @@
 package com.pistacium.modcheck.util;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import com.pistacium.modcheck.ModCheck;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -74,5 +74,35 @@ public class ModCheckUtils {
         }
 
         return url;
+    }
+
+    public static Config readConfig() {
+        Gson gson = new Gson();
+        File file = new File("modcheck.json");
+        if (!file.exists()) {
+            return null;
+        }
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(file));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        assert br != null;
+        return gson.fromJson(br, Config.class);
+    }
+
+    public static void writeConfig(File dir) {
+        File file = new File("modcheck.json");
+        Config config = new Config(dir.getPath());
+        try (Writer writer = new FileWriter(file)) {
+            Gson gson = new GsonBuilder()
+                    .setPrettyPrinting()
+                    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                    .create();
+            gson.toJson(config, writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
