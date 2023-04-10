@@ -5,6 +5,7 @@ import com.google.gson.JsonParser;
 import com.pistacium.modcheck.mod.ModData;
 import com.pistacium.modcheck.mod.resource.ModResource;
 import com.pistacium.modcheck.mod.version.ModVersion;
+import com.pistacium.modcheck.util.Config;
 import com.pistacium.modcheck.util.ModCheckStatus;
 import com.pistacium.modcheck.util.ModCheckUtils;
 import com.pistacium.modcheck.util.SwingUtils;
@@ -81,7 +82,8 @@ public class ModCheckFrame extends JFrame {
 
         JButton selectPathButton = new JButton("Select Instance Paths");
         selectPathButton.addActionListener(e -> {
-            JFileChooser pathSelector = new JFileChooser();
+            Config instanceDir = ModCheckUtils.readConfig();
+            JFileChooser pathSelector = instanceDir == null ? new JFileChooser() : new JFileChooser(instanceDir.getDir());
             pathSelector.setMultiSelectionEnabled(true);
             pathSelector.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             pathSelector.setDialogType(JFileChooser.CUSTOM_DIALOG);
@@ -111,6 +113,7 @@ public class ModCheckFrame extends JFrame {
                 }
                 selectedDirLabel.setText("<html>Selected Instances : <br>" + stringBuilder.substring(0, stringBuilder.length() - (stringBuilder.length() != 0 ? 2 : 0)) + "</html>");
             }
+            ModCheckUtils.writeConfig(files[0].getParentFile());
         });
 
         instanceSelectPanel.add(selectPathButton);
