@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.pistacium.modcheck.mod.ModData;
 import com.pistacium.modcheck.mod.version.ModVersion;
-import com.pistacium.modcheck.util.Config;
 import com.pistacium.modcheck.util.ModCheckStatus;
 import com.pistacium.modcheck.util.ModCheckUtils;
 
@@ -33,8 +32,6 @@ public class ModCheck {
 
     public static final ArrayList<ModData> AVAILABLE_MODS = new ArrayList<>();
 
-    public static Config config;
-
 
     public static void main(String[] args) {
         THREAD_EXECUTOR.submit(() -> {
@@ -51,7 +48,7 @@ public class ModCheck {
 
                 // Get mod list
                 setStatus(ModCheckStatus.LOADING_MOD_LIST);
-                JsonElement modElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://me.redlimerl.com/mcsr/modcheck/v2")));
+                JsonElement modElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/meta/v3/mods.json")));
                 FRAME_INSTANCE.getProgressBar().setValue(60);
 
                 setStatus(ModCheckStatus.LOADING_MOD_RESOURCE);

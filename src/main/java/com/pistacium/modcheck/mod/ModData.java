@@ -16,11 +16,13 @@ public class ModData {
     private final String warningMessage;
     private final List<String> incompatibleMods = new ArrayList<>();
     private final List<ModResource> resourceList = new ArrayList<>();
+    private final String readme;
 
     public ModData(JsonObject jsonObject) {
         this.name = jsonObject.get("name").getAsString();
         this.description = jsonObject.get("description").getAsString();
         this.warningMessage = jsonObject.has("warn") ? jsonObject.get("warn").getAsString() : "";
+        this.readme = jsonObject.has("readme") ? jsonObject.get("readme").getAsString() : "";
         for (JsonElement jsonElement : jsonObject.getAsJsonArray("incompatible")) {
             this.incompatibleMods.add(jsonElement.getAsString());
         }
@@ -49,6 +51,10 @@ public class ModData {
 
     public String getWarningMessage() {
         return warningMessage;
+    }
+
+    public String getReadme() {
+        return readme;
     }
 
     public List<String> getIncompatibleMods() {

@@ -269,7 +269,7 @@ public class ModCheckFrame extends JFrame {
         JButton selectAllButton = new JButton("Select All");
         selectAllButton.addActionListener(e -> {
             for (Map.Entry<ModData, JCheckBox> entry : modCheckBoxes.entrySet()) {
-                if (entry.getKey().getIncompatibleMods().size() > 0) continue;
+                if (!entry.getKey().getReadme().isEmpty() || entry.getKey().getIncompatibleMods().size() > 0) continue;
 
                 if (entry.getValue().isEnabled() && entry.getKey().getWarningMessage().isEmpty()) {
                     entry.getValue().setSelected(true);
@@ -389,10 +389,25 @@ public class ModCheckFrame extends JFrame {
                     if (isSelected && !modData.getWarningMessage().isEmpty()) {
                         JOptionPane.showMessageDialog(this, "<html><body>" + modData.getWarningMessage() + "<br>If you ignore this warning, your run being may get rejected.</body></html>", "WARNING!", JOptionPane.WARNING_MESSAGE);
                     }
+
+                    if (isSelected && !modData.getReadme().isEmpty()) {
+                        Object[] options = { "Check Readme", "I know!", "Cancel" };
+                        int result = JOptionPane.showOptionDialog(this, "If you are using this mod for the first time, please read the README.", "WARNING!", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+                        if (result == 0) {
+                            try {
+                                Desktop.getDesktop().browse(new URI(modData.getReadme()));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        if (result == 2) {
+                            checkBox.setSelected(false);
+                        }
+                    }
                 });
 
                 int line = modData.getDescription().split("\n").length;
-                JLabel description = new JLabel("<html><body>" + modData.getDescription().replace("\n", "<br>") + "</body></html>");
+                JLabel description = new JLabel("<html><body>" + modData.getDescription().replaceAll("\n", "<br>").replaceAll("<a ", "<b ").replaceAll("</a>", "</b>") + "</body></html>");
                 description.setMaximumSize(new Dimension(800, 60 * line));
                 description.setBorder(new EmptyBorder(0, 15,0, 0));
                 Font f = description.getFont();
