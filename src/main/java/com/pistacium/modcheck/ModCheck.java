@@ -1,9 +1,11 @@
 package com.pistacium.modcheck;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.pistacium.modcheck.mod.ModData;
-import com.pistacium.modcheck.mod.version.ModVersion;
+import com.pistacium.modcheck.mod.MCVersion;
+import com.pistacium.modcheck.mod.ModInfo;
 import com.pistacium.modcheck.util.ModCheckStatus;
 import com.pistacium.modcheck.util.ModCheckUtils;
 
@@ -24,31 +26,31 @@ public class ModCheck {
         FRAME_INSTANCE.getProgressBar().setString(status.getDescription());
     }
 
+    public static final Gson GSON = new GsonBuilder().serializeNulls().create();
     public static final ExecutorService THREAD_EXECUTOR = Executors.newSingleThreadExecutor();
 
-    public static ModCheckFrame FRAME_INSTANCE;
+    public static ModCheckFrameForm FRAME_INSTANCE;
 
-    public static final ArrayList<ModVersion> AVAILABLE_VERSIONS = new ArrayList<>();
+    public static final ArrayList<MCVersion> AVAILABLE_VERSIONS = new ArrayList<>();
 
-    public static final ArrayList<ModData> AVAILABLE_MODS = new ArrayList<>();
-
+    public static final ArrayList<ModInfo> AVAILABLE_MODS = new ArrayList<>();
 
     public static void main(String[] args) {
         THREAD_EXECUTOR.submit(() -> {
             try {
-                FRAME_INSTANCE = new ModCheckFrame();
+                FRAME_INSTANCE = new ModCheckFrameForm();
 
                 // Get available versions
                 setStatus(ModCheckStatus.LOADING_AVAILABLE_VERSIONS);
-                JsonElement availableElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/mod_versions.json")));
+                JsonElement availableElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/meta/v4/mc_versions.json")));
                 FRAME_INSTANCE.getProgressBar().setValue(30);
                 for (JsonElement jsonElement : availableElement.getAsJsonArray()) {
-                    AVAILABLE_VERSIONS.add(ModVersion.of(jsonElement.getAsString()));
+                    AVAILABLE_VERSIONS.add(GSON.fromJson(jsonElement, MCVersion.class));
                 }
 
                 // Get mod list
                 setStatus(ModCheckStatus.LOADING_MOD_LIST);
-                JsonElement modElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/meta/v3/mods.json")));
+                JsonElement modElement = JsonParser.parseString(Objects.requireNonNull(ModCheckUtils.getUrlRequest("https://redlime.github.io/MCSRMods/meta/v4/files.json")));
                 FRAME_INSTANCE.getProgressBar().setValue(60);
 
                 setStatus(ModCheckStatus.LOADING_MOD_RESOURCE);
@@ -56,8 +58,8 @@ public class ModCheck {
                 for (JsonElement jsonElement : modElement.getAsJsonArray()) {
                     try {
                         FRAME_INSTANCE.getProgressBar().setString("Loading information of "+jsonElement.getAsJsonObject().get("name"));
-                        ModData modData = new ModData(jsonElement.getAsJsonObject());
-                        AVAILABLE_MODS.add(modData);
+                        ModInfo modInfo = GSON.fromJson(jsonElement, ModInfo.class);
+                        if (Objects.equals(modInfo.getType(), "fabric_mod")) AVAILABLE_MODS.add(modInfo);
                     } catch (Throwable e) {
                         StringWriter sw = new StringWriter();
                         PrintWriter pw = new PrintWriter(sw);

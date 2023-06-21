@@ -2,13 +2,13 @@ package com.pistacium.modcheck;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.pistacium.modcheck.mod.ModData;
-import com.pistacium.modcheck.mod.resource.ModResource;
-import com.pistacium.modcheck.mod.version.ModVersion;
+import com.pistacium.modcheck.mod.*;
 import com.pistacium.modcheck.util.Config;
 import com.pistacium.modcheck.util.ModCheckStatus;
 import com.pistacium.modcheck.util.ModCheckUtils;
 import com.pistacium.modcheck.util.SwingUtils;
+import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.impl.util.version.VersionParser;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,66 +22,55 @@ import java.nio.file.Path;
 import java.util.*;
 
 @SuppressWarnings("ResultOfMethodCallIgnored")
-public class ModCheckFrame extends JFrame {
+public class ModCheckFrameForm extends JFrame {
 
     private static final FontUIResource font = new FontUIResource("SansSerif", Font.BOLD, 15);
-
-    private final JPanel mainPanel;
     private JProgressBar progressBar;
-    private JComboBox<ModVersion> versionSelection;
-    private JPanel versionJPanel;
-    private JScrollPane versionScrollPane;
-    private final HashMap<ModData, JCheckBox> modCheckBoxes = new HashMap<>();
     private JButton downloadButton;
-    private File[] selectDirs = null;
+    private JCheckBox deleteAllJarCheckbox;
+    private JButton selectInstancePathsButton;
+    private JComboBox<MCVersion> mcVersionCombo;
+    private JRadioButton randomSeedRadioButton;
+    private JRadioButton setSeedRadioButton;
+    private JRadioButton windowsRadioButton;
+    private JRadioButton macRadioButton;
+    private JRadioButton linuxRadioButton;
+    private JCheckBox accessibilityCheckBox;
+    private JScrollPane modListScroll;
+    private JPanel mainPanel;
     private JLabel selectedDirLabel;
+    private JButton deselectAllButton;
+    private JButton selectAllRecommendsButton;
+    private JPanel modListPanel;
+    private JScrollBar scrollBar1;
 
-    public JProgressBar getProgressBar() {
-        return progressBar;
-    }
 
-    ModCheckFrame() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-        super("ModCheck v"+ ModCheckConstants.APPLICATION_VERSION + " by RedLime");
-        setUIFont();
+    private File[] selectDirs = null;
+    private final HashMap<ModInfo, JCheckBox> modCheckBoxes = new HashMap<>();
+    private String currentOS = ModCheckUtils.getCurrentOS();
 
-        mainPanel = new JPanel(new BorderLayout());
-
-        initHeaderLayout();
-
-        initCenterLayout();
-
-        initBottomLayout();
-
-        initMenuBar();
-
-        getContentPane().add(mainPanel);
-
+    ModCheckFrameForm() throws UnsupportedLookAndFeelException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        setContentPane(mainPanel);
+        setTitle("ModCheck v" + ModCheckConstants.APPLICATION_VERSION + " by RedLime");
         setSize(1100, 700);
-        setResizable(false);
         setVisible(true);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-        URL resource = getClass().getClassLoader().getResource("end_crystal.png");
-        if (resource != null) setIconImage(new ImageIcon(resource).getImage());
-    }
-
-    private static void setUIFont(){
         Enumeration<?> keys = UIManager.getLookAndFeelDefaults().keys();
         while (keys.hasMoreElements()) {
             Object key = keys.nextElement();
             Object value = UIManager.get(key);
             if (value instanceof FontUIResource)
-                UIManager.put(key, ModCheckFrame.font);
+                UIManager.put(key, font);
         }
-    }
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-    private void initHeaderLayout() {
-        JPanel instanceSelectPanel = new JPanel();
+        URL resource = getClass().getClassLoader().getResource("end_crystal.png");
+        if (resource != null) setIconImage(new ImageIcon(resource).getImage());
 
-        JButton selectPathButton = new JButton("Select Instance Paths");
-        selectPathButton.addActionListener(e -> {
+        initMenuBar();
+
+        selectInstancePathsButton.addActionListener(e -> {
             Config instanceDir = ModCheckUtils.readConfig();
             JFileChooser pathSelector = instanceDir == null ? new JFileChooser() : new JFileChooser(instanceDir.getDir());
             pathSelector.setMultiSelectionEnabled(true);
@@ -116,21 +105,7 @@ public class ModCheckFrame extends JFrame {
             ModCheckUtils.writeConfig(files[0].getParentFile());
         });
 
-        instanceSelectPanel.add(selectPathButton);
-        mainPanel.add(instanceSelectPanel, BorderLayout.NORTH);
-    }
-
-    private void initBottomLayout() {
-        JPanel instanceBottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 100, 5));
-
-        progressBar = new JProgressBar();
-        progressBar.setStringPainted(true);
         progressBar.setString("Idle...");
-        progressBar.setPreferredSize(new Dimension(500, 30));
-
-        JPanel buttonPanel = new JPanel(new GridLayout(2, 1));
-        JCheckBox jCheckBox = new JCheckBox("Delete all .jar files before downloading");
-        downloadButton = new JButton("Download");
         downloadButton.addActionListener(e -> {
             if (selectDirs == null || selectDirs.length < 1) return;
 
@@ -164,35 +139,34 @@ public class ModCheckFrame extends JFrame {
                 }
             }
 
-            if (this.versionSelection.getSelectedItem() == null) {
+            if (mcVersionCombo.getSelectedItem() == null) {
                 JOptionPane.showMessageDialog(this, "Error: selected item is null");
                 downloadButton.setEnabled(true);
                 return;
             }
 
-            ArrayList<ModData> targetMods = new ArrayList<>();
+            ArrayList<ModInfo> targetMods = new ArrayList<>();
             int maxCount = 0;
-            for (Map.Entry<ModData, JCheckBox> modEntry : modCheckBoxes.entrySet()) {
+            for (Map.Entry<ModInfo, JCheckBox> modEntry : modCheckBoxes.entrySet()) {
                 if (modEntry.getValue().isSelected() && modEntry.getValue().isEnabled()) {
-                    System.out.println("Selected "+modEntry.getKey().getName());
+                    System.out.println("Selected " + modEntry.getKey().getName());
                     targetMods.add(modEntry.getKey());
                     maxCount++;
                 }
             }
-            ModVersion mcVersion = (ModVersion) this.versionSelection.getSelectedItem();
+            MCVersion mcVersion = (MCVersion) mcVersionCombo.getSelectedItem();
 
             for (File instanceDir : modsFileStack) {
                 File[] modFiles = instanceDir.listFiles();
                 if (modFiles == null) return;
                 for (File file : modFiles) {
                     if (file.getName().endsWith(".jar")) {
-                        if (jCheckBox.isSelected()) {
+                        if (deleteAllJarCheckbox.isSelected()) {
                             file.delete();
                         } else {
-                            String modFileName = file.getName().split(ModVersion.versionRegex.pattern())[0]
-                                    .split(ModVersion.snapshotRegex.pattern())[0];
-                            for (ModData targetMod : targetMods) {
-                                String targetModFileName = targetMod.getLatestVersionResource(mcVersion).getFileName();
+                            String modFileName = file.getName().split("-")[0].split("\\+")[0];
+                            for (ModInfo targetMod : targetMods) {
+                                String targetModFileName = targetMod.getFileFromVersion(mcVersion, this.getRuleIndicator()).getName();
                                 if (targetModFileName.startsWith(modFileName)) {
                                     file.delete();
                                 }
@@ -208,14 +182,14 @@ public class ModCheckFrame extends JFrame {
             int finalMaxCount = maxCount;
             ModCheck.THREAD_EXECUTOR.submit(() -> {
                 int count = 0;
-                ArrayList<ModData> failedMods = new ArrayList<>();
-                for (ModData targetMod : targetMods) {
+                ArrayList<ModInfo> failedMods = new ArrayList<>();
+                for (ModInfo targetMod : targetMods) {
                     this.progressBar.setString("Downloading '" + targetMod.getName() + "'");
-                    System.out.println("Downloading "+targetMod.getName());
+                    System.out.println("Downloading " + targetMod.getName());
                     Stack<File> downloadFiles = new Stack<>();
                     downloadFiles.addAll(modsFileStack);
-                    if (!targetMod.downloadModJarFile(mcVersion, downloadFiles)) {
-                        System.out.println("Failed to downloading "+targetMod.getName());
+                    if (!targetMod.downloadFile(mcVersion, this.getRuleIndicator(), downloadFiles)) {
+                        System.out.println("Failed to downloading " + targetMod.getName());
                         failedMods.add(targetMod);
                     }
                     this.progressBar.setValue((int) ((++count / (finalMaxCount * 1f)) * 100));
@@ -227,10 +201,10 @@ public class ModCheckFrame extends JFrame {
 
                 if (failedMods.size() > 0) {
                     StringBuilder failedModString = new StringBuilder();
-                    for (ModData failedMod : failedMods) {
+                    for (ModInfo failedMod : failedMods) {
                         failedModString.append(failedMod.getName()).append(", ");
                     }
-                    JOptionPane.showMessageDialog(this, "Failed to download " + failedModString.substring(0, failedModString.length() - 2) +".", "Please try again", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Failed to download " + failedModString.substring(0, failedModString.length() - 2) + ".", "Please try again", JOptionPane.ERROR_MESSAGE);
                 } else {
                     JOptionPane.showMessageDialog(this, "All selected mods have been downloaded!");
                 }
@@ -239,63 +213,63 @@ public class ModCheckFrame extends JFrame {
         });
         downloadButton.setEnabled(false);
 
-        instanceBottomPanel.add(progressBar);
-        buttonPanel.add(jCheckBox);
-        buttonPanel.add(downloadButton);
-        instanceBottomPanel.add(buttonPanel);
-        mainPanel.add(instanceBottomPanel, BorderLayout.SOUTH);
-    }
+        mcVersionCombo.addActionListener(e -> updateModList());
 
-    private void initCenterLayout() {
-        JPanel centerPanel = new JPanel();
-        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        selectAllRecommendsButton.addActionListener(e -> {
+            for (Map.Entry<ModInfo, JCheckBox> entry : modCheckBoxes.entrySet()) {
+                if (!entry.getKey().isRecommended()
+                        || entry.getKey().getIncompatible().stream().anyMatch(incompatible ->
+                        modCheckBoxes.entrySet().stream().anyMatch(entry2 ->
+                                entry2.getKey().getName().equals(incompatible) && entry2.getValue().isSelected()))
+                ) continue;
 
-        JPanel instancePathsPanel = new JPanel();
-        selectedDirLabel = new JLabel("You can select multiple instances by press shift or ctrl key");
-        instancePathsPanel.add(selectedDirLabel);
-
-        JPanel versionSelectPanel = new JPanel();
-        JLabel headerLabel = new JLabel("Minecraft Version: ");
-        versionSelection = new JComboBox<>();
-        versionSelection.addActionListener(e -> updateModList());
-
-        versionJPanel = new JPanel();
-        versionJPanel.setLayout(new BoxLayout(versionJPanel, BoxLayout.Y_AXIS));
-        versionScrollPane = new JScrollPane(versionJPanel, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        versionScrollPane.setPreferredSize(new Dimension(1000, 500));
-        versionScrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
-        JPanel selectButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEADING));
-        JButton selectAllButton = new JButton("Select All");
-        selectAllButton.addActionListener(e -> {
-            for (Map.Entry<ModData, JCheckBox> entry : modCheckBoxes.entrySet()) {
-                if (!entry.getKey().getReadme().isEmpty() || entry.getKey().getIncompatibleMods().size() > 0) continue;
-
-                if (entry.getValue().isEnabled() && entry.getKey().getWarningMessage().isEmpty()) {
+                if (entry.getValue().isEnabled()) {
                     entry.getValue().setSelected(true);
                 }
             }
             JOptionPane.showMessageDialog(this, "<html><body>Some mods that have warnings (like noPeaceful)<br> or incompatible with other mods (like Starlight and Phosphor) aren't automatically selected.<br>You have to select them yourself.</body></html>", "WARNING!", JOptionPane.WARNING_MESSAGE);
         });
-        JButton deselectAllButton = new JButton("Deselect All");
+
         deselectAllButton.addActionListener(e -> {
             for (JCheckBox cb : modCheckBoxes.values()) {
                 cb.setSelected(false);
                 cb.setEnabled(true);
             }
         });
-        selectButtonPanel.add(selectAllButton);
-        selectButtonPanel.add(deselectAllButton);
 
-        versionSelectPanel.add(headerLabel);
-        versionSelectPanel.add(versionSelection);
-        centerPanel.add(instancePathsPanel);
-        centerPanel.add(versionSelectPanel);
-        centerPanel.add(selectButtonPanel);
-        centerPanel.add(versionScrollPane);
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(0, 30, 0, 30));
-        mainPanel.add(centerPanel, BorderLayout.CENTER);
+        windowsRadioButton.addActionListener(e -> {
+            currentOS = "windows";
+            updateModList();
+        });
+        if (currentOS.equals("windows")) windowsRadioButton.setSelected(true);
+        macRadioButton.addActionListener(e -> {
+            currentOS = "osx";
+            updateModList();
+        });
+        if (currentOS.equals("osx")) macRadioButton.setSelected(true);
+        linuxRadioButton.addActionListener(e -> {
+            currentOS = "linux";
+            updateModList();
+        });
+        if (currentOS.equals("linux")) linuxRadioButton.setSelected(true);
+
+        randomSeedRadioButton.addActionListener(e -> updateModList());
+        setSeedRadioButton.addActionListener(e -> updateModList());
+        accessibilityCheckBox.addActionListener(e -> {
+            if (accessibilityCheckBox.isSelected()) {
+                String message = "You may utilize these mods ONLY if you tell the MCSR Team about a medical condition that makes them necessary in advance.";
+                int result = JOptionPane.showConfirmDialog(this, message, "THIS OPTION IS NOT FOR ALL!", JOptionPane.OK_CANCEL_OPTION);
+                if (result == 0) {
+                    updateModList();
+                } else {
+                    accessibilityCheckBox.setSelected(false);
+                }
+            } else {
+                updateModList();
+            }
+        });
     }
+
 
     public void initMenuBar() {
         JMenuBar menuBar = new JMenuBar();
@@ -323,7 +297,7 @@ public class ModCheckFrame extends JFrame {
         JMenuItem checkChangeLogSource = new JMenuItem("Changelog");
         checkChangeLogSource.addActionListener(e -> {
             try {
-                Desktop.getDesktop().browse(new URI("https://github.com/RedLime/ModCheck/releases/tag/"+ModCheckConstants.APPLICATION_VERSION));
+                Desktop.getDesktop().browse(new URI("https://github.com/RedLime/ModCheck/releases/tag/" + ModCheckConstants.APPLICATION_VERSION));
             } catch (Exception ignored) {
             }
         });
@@ -333,8 +307,8 @@ public class ModCheckFrame extends JFrame {
         updateCheckSource.addActionListener(e -> {
             try {
                 JsonObject jsonObject = JsonParser.parseString(ModCheckUtils.getUrlRequest("https://api.github.com/repos/RedLime/ModCheck/releases/latest")).getAsJsonObject();
-                if (ModVersion.of(jsonObject.get("tag_name").getAsString()).compareTo(ModVersion.of(ModCheckConstants.APPLICATION_VERSION)) > 0) {
-                    int result = JOptionPane.showOptionDialog(null, "<html><body>Found new ModCheck update!<br><br>Current Version : " + ModCheckConstants.APPLICATION_VERSION + "<br>Updated Version : " + jsonObject.get("tag_name").getAsString() + "</body></html>","Update Checker", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, new String[] { "Download", "Cancel" }, "Download");
+                if (VersionParser.parseSemantic(jsonObject.get("tag_name").getAsString()).compareTo((Version) VersionParser.parseSemantic(ModCheckConstants.APPLICATION_VERSION)) > 0) {
+                    int result = JOptionPane.showOptionDialog(null, "<html><body>Found new ModCheck update!<br><br>Current Version : " + ModCheckConstants.APPLICATION_VERSION + "<br>Updated Version : " + jsonObject.get("tag_name").getAsString() + "</body></html>", "Update Checker", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, new String[]{"Download", "Cancel"}, "Download");
                     if (result == 0) {
                         Desktop.getDesktop().browse(new URI("https://github.com/RedLime/ModCheck/releases/latest"));
                     }
@@ -352,78 +326,81 @@ public class ModCheckFrame extends JFrame {
     }
 
     public void updateVersionList() {
-        versionSelection.removeAllItems();
-        for (ModVersion availableVersion : ModCheck.AVAILABLE_VERSIONS) {
-            versionSelection.addItem(availableVersion);
+        mcVersionCombo.removeAllItems();
+        for (MCVersion availableVersion : ModCheck.AVAILABLE_VERSIONS) {
+            mcVersionCombo.addItem(availableVersion);
         }
-        versionSelection.setSelectedItem(ModCheck.AVAILABLE_VERSIONS.get(0));
+        mcVersionCombo.setSelectedItem(ModCheck.AVAILABLE_VERSIONS.get(0));
         updateModList();
     }
 
     public void updateModList() {
-        versionJPanel.removeAll();
+        modListPanel.removeAll();
+        modListPanel.setLayout(new BoxLayout(modListPanel, BoxLayout.Y_AXIS));
         modCheckBoxes.clear();
 
-        if (this.versionSelection.getSelectedItem() == null) return;
+        if (mcVersionCombo.getSelectedItem() == null) return;
 
-        ModVersion mcVersion = (ModVersion) this.versionSelection.getSelectedItem();
+        MCVersion mcVersion = (MCVersion) mcVersionCombo.getSelectedItem();
 
-        for (ModData modData : ModCheck.AVAILABLE_MODS) {
-            ModResource modResource = modData.getLatestVersionResource(mcVersion);
-            if (modResource != null) {
+        modFor:
+        for (ModInfo modInfo : ModCheck.AVAILABLE_MODS) {
+            ModFile modFile = modInfo.getFileFromVersion(mcVersion, this.getRuleIndicator());
+            if (modFile != null) {
+                if (modFile.getRules() != null) {
+                    for (ModRule rule : modFile.getRules()) {
+                        boolean allowed = rule.getAction().equals("allow");
+                        for (Map.Entry<String, String> entry : rule.getProperties().entrySet()) {
+                            if (entry.getKey().equals("category") && !(entry.getValue().equals("rsg") == randomSeedRadioButton.isSelected() == allowed))
+                                continue modFor;
+                            if (entry.getKey().equals("condition") && !(entry.getValue().equals("medical_issue") == accessibilityCheckBox.isSelected() == allowed))
+                                continue modFor;
+                            if (entry.getKey().equals("os") && !(entry.getValue().equals(currentOS) == allowed))
+                                continue modFor;
+                        }
+                    }
+                }
+
                 JPanel modPanel = new JPanel();
                 modPanel.setLayout(new BoxLayout(modPanel, BoxLayout.Y_AXIS));
 
-                String versionName = modResource.getModVersion().getVersionName();
-                JCheckBox checkBox = new JCheckBox(modData.getName() + " (v" + (versionName.substring(versionName.startsWith("v") ? 1 : 0)) + ")");
-                checkBox.addActionListener(i -> {
-                    boolean isSelected = checkBox.isSelected();
-                    for (String incompatibleMod : modData.getIncompatibleMods()) {
-                        for (Map.Entry<ModData, JCheckBox> entry : modCheckBoxes.entrySet()) {
-                            if (Objects.equals(entry.getKey().getName(), incompatibleMod)) {
-                                entry.getValue().setEnabled(!isSelected);
-                            }
-                        }
-                    }
-
-                    if (isSelected && !modData.getWarningMessage().isEmpty()) {
-                        JOptionPane.showMessageDialog(this, "<html><body>" + modData.getWarningMessage() + "<br>If you ignore this warning, your run being may get rejected.</body></html>", "WARNING!", JOptionPane.WARNING_MESSAGE);
-                    }
-
-                    if (isSelected && !modData.getReadme().isEmpty()) {
-                        Object[] options = { "Check Readme", "I know!", "Cancel" };
-                        int result = JOptionPane.showOptionDialog(this, "If you are using this mod for the first time, please read the README.", "WARNING!", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-                        if (result == 0) {
-                            try {
-                                Desktop.getDesktop().browse(new URI(modData.getReadme()));
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        if (result == 2) {
-                            checkBox.setSelected(false);
-                        }
-                    }
+                String versionName = modFile.getVersion();
+                JCheckBox checkBox = new JCheckBox(modInfo.getName() + " (v" + (versionName.substring(versionName.startsWith("v") ? 1 : 0)) + ")");
+                checkBox.addChangeListener(i -> {
+                    modCheckBoxes.entrySet().stream()
+                            .filter(entry -> entry.getKey().getIncompatible().contains(modInfo.getName()) || modInfo.getIncompatible().contains(entry.getKey().getName()))
+                            .forEach(entry -> entry.getValue().setEnabled(modCheckBoxes.entrySet().stream()
+                                    .noneMatch(entry2 -> (entry.getKey().getIncompatible().contains(entry2.getKey().getName()) || entry2.getKey().getIncompatible().contains(entry.getKey().getName())) && entry2.getValue().isSelected())));
                 });
 
-                int line = modData.getDescription().split("\n").length;
-                JLabel description = new JLabel("<html><body>" + modData.getDescription().replaceAll("\n", "<br>").replaceAll("<a ", "<b ").replaceAll("</a>", "</b>") + "</body></html>");
+                int line = modInfo.getDescription().split("\n").length;
+                JLabel description = new JLabel("<html><body>" + modInfo.getDescription().replaceAll("\n", "<br>").replaceAll("<a ", "<b ").replaceAll("</a>", "</b>") + "</body></html>");
                 description.setMaximumSize(new Dimension(800, 60 * line));
-                description.setBorder(new EmptyBorder(0, 15,0, 0));
+                description.setBorder(new EmptyBorder(0, 15, 0, 0));
                 Font f = description.getFont();
                 description.setFont(f.deriveFont(f.getStyle() & ~Font.BOLD));
 
                 modPanel.add(checkBox);
                 modPanel.add(description);
                 modPanel.setMaximumSize(new Dimension(950, 60 * line));
-                modPanel.setBorder(new EmptyBorder(0, 10,10, 0));
+                modPanel.setBorder(new EmptyBorder(0, 10, 10, 0));
 
-                versionJPanel.add(modPanel);
-                modCheckBoxes.put(modData, checkBox);
+                modListPanel.add(modPanel);
+                modCheckBoxes.put(modInfo, checkBox);
             }
         }
-        versionJPanel.updateUI();
-        versionScrollPane.updateUI();
+        modListPanel.updateUI();
+        modListScroll.updateUI();
         downloadButton.setEnabled(true);
     }
+
+    public JProgressBar getProgressBar() {
+        return progressBar;
+    }
+
+    private RuleIndicator getRuleIndicator() {
+        String runType = randomSeedRadioButton.isSelected() ? "rsg" : "ssg";
+        return new RuleIndicator(currentOS, runType, accessibilityCheckBox.isSelected());
+    }
+
 }

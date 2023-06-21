@@ -2,6 +2,6 @@ package com.pistacium.modcheck;
 
 public class ModCheckConstants {
 
-    public static final String APPLICATION_VERSION = "0.6";
+    public static final String APPLICATION_VERSION = "1.0";
 
 }

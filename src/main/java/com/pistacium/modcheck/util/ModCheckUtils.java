@@ -70,4 +70,14 @@ public class ModCheckUtils {
             throw new RuntimeException(e);
         }
     }
+
+    public static String getCurrentOS() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("win")) return "windows";
+        if (osName.contains("mac")) return "osx";
+        if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
+            return "linux";
+        }
+        return "unknown";
+    }
 }
